@@ -29,8 +29,6 @@ def create_budget_grid(grid_id, header_name, accent_color="#228be6"):
             }
         })
 
-
-# --- ADD THIS NEW BLOCK ---
     # Create a JavaScript formula string that sums all 12 months dynamically.
     # It builds: params.data ? (Number(params.data.jan) || 0) + (Number(params.data.feb) || 0) ... : 0
     sum_logic = "params.data ? " + " + ".join([f"(Number(params.data.{m}) || 0)" for m in months]) + " : 0"
@@ -44,7 +42,10 @@ def create_budget_grid(grid_id, header_name, accent_color="#228be6"):
         "width": 90,
         "cellStyle": {
             "fontWeight": "bold", 
-            "backgroundColor": f"{accent_color}15" # Give it a light tint to match your theme
+            "backgroundColor": f"{accent_color}15", # Give it a light tint to match your theme
+            "display": "flex",           # <--- Keep/Add this
+            "alignItems": "right",       # <--- Keep/Add this
+            "justifyContent": "right"
         },
         "valueGetter": {"function": sum_logic},
         "valueFormatter": {
@@ -66,7 +67,7 @@ def create_budget_grid(grid_id, header_name, accent_color="#228be6"):
             "headerHeight": 24,
         },
         defaultColDef={
-            "resizable": True, 
+            "resizable": False, 
             "sortable": False, 
             "editable": True, 
             "suppressMovable": True,
@@ -96,7 +97,7 @@ def create_status_grid(grid_id):
     # Matches the exact column widths of your main grids
     status_cols = [
         {
-            "headerName": "", 
+            "headerName": "Budgetstatus", 
             "field": "Category", 
             "pinned": "left", 
             "width": 200, 
@@ -120,9 +121,12 @@ def create_status_grid(grid_id):
 
     # Add the Total column to match the others
     status_cols.append({
+        "headerName": "Total",
         "field": "row_total",
+        "editable": False,
         "width": 90,
         "pinned": "right",
+        "type": "numericColumn",
         "cellStyle": {
             "styleConditions": [
                 {"condition": "params.value == 0", "style": {"backgroundColor": "#ebfbee", "color": "#2b8a3e", "fontWeight": "bold"}},
@@ -137,6 +141,13 @@ def create_status_grid(grid_id):
         columnDefs=status_cols,
         rowData=[{"Category": "Att allokera"}], # Initial dummy row
         columnSize="responsiveSizeToFit",
+        defaultColDef={
+            "resizable": False, 
+            "sortable": False, 
+            "editable": False, 
+            "suppressMovable": True,
+            "cellStyle": {"display": "flex", "alignItems": "center"}
+        },
         dashGridOptions={
             "headerHeight": 24, 
             "rowHeight": 24,
