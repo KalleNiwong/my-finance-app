@@ -16,13 +16,24 @@ sidebar = dmc.AppShellNavbar(
             
             dcc.Link(
                 dmc.Button(
-                    "Transaktioner",  # TODO: this handles both new transaktions and looking at all
-                    leftSection=get_icon("material-symbols:data-saver-on-rounded"), # can change to "-light"
+                    "Startsida",
+                    leftSection=get_icon("material-symbols:home-outline-rounded"), # can change to "-light"
                     variant="subtle", 
                     fullWidth=True, 
                     justify="left"
                 ), 
-                href="/upload_page", 
+                href="/", 
+                style={"textDecoration": "none"}
+            ),
+            dcc.Link(
+                dmc.Button(
+                    "Transaktioner",  # TODO: this handles both new transaktions and looking at all
+                    leftSection=get_icon("material-symbols:list-rounded"), # can change to "-light"
+                    variant="subtle", 
+                    fullWidth=True, 
+                    justify="left"
+                ), 
+                href="/transactions", 
                 style={"textDecoration": "none"}
             ),
             dcc.Link(
@@ -34,6 +45,17 @@ sidebar = dmc.AppShellNavbar(
                     justify="left"
                 ), 
                 href="/dashboard", 
+                style={"textDecoration": "none"}
+            ),
+            dcc.Link(
+                dmc.Button(
+                    "Budget", 
+                    leftSection=get_icon("material-symbols:dashboard-outline-rounded"), # can change to "-light"
+                    variant="subtle", 
+                    fullWidth=True, 
+                    justify="left"
+                ), 
+                href="/budget", 
                 style={"textDecoration": "none"}
             ),
         ],

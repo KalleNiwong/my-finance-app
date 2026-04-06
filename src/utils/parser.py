@@ -26,4 +26,5 @@ def parse_xlsx(contents, filename) -> pd.DataFrame:
     df_clean = df[[date_col, desc_col, val_col]]
     df_clean["belopp"] = df_clean["belopp"].round(0).astype(int)
 
+    
     return df_clean 
