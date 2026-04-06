@@ -1,8 +1,7 @@
 import dash
 import dash_ag_grid as dag
 import dash_mantine_components as dmc
-from dash import html, Input, Output, State, callback, clientside_callback, ClientsideFunction, no_update
-from database.db_manager import save_budget_to_db, load_budget_from_db
+from dash import html, dcc
 dash.register_page(__name__, path='/budget', name="Budget Planner")
 
 months = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
@@ -14,7 +13,7 @@ def create_budget_grid(grid_id, header_name, accent_color="#228be6"):
             "headerName": header_name,  # This is the visible title (Inkomst, etc.)
             "field": "Category",        # Keep this as 'Category' for your DB/callbacks
             "pinned": "left", 
-            "width": 200,               # Slimmed down from 200
+            "width": 200,            
             "cellStyle": {"fontWeight": "bold"} 
         }
     ]
@@ -26,14 +25,38 @@ def create_budget_grid(grid_id, header_name, accent_color="#228be6"):
             "type": "numericColumn",
             "width": 75, # Slimmed down to fit 12 months easily
             "valueFormatter": {
-                "function": "params.value != null ? d3.format(',.0f')(params.value).replace(/,/g, ' ') : ''"
+                "function": "params.value != null ? d3.format(',.0f')(params.value).replace(/,/g, ' ') : ''" # to get the space number formatting e.g., "3 000" and "1 000 000" which I like
             }
         })
 
+
+# --- ADD THIS NEW BLOCK ---
+    # Create a JavaScript formula string that sums all 12 months dynamically.
+    # It builds: params.data ? (Number(params.data.jan) || 0) + (Number(params.data.feb) || 0) ... : 0
+    sum_logic = "params.data ? " + " + ".join([f"(Number(params.data.{m}) || 0)" for m in months]) + " : 0"
+
+    grid_cols.append({
+        "headerName": "Total",
+        "field": "row_total", # This field name doesn't need to exist in your database
+        "editable": False,    # Lock this column so users can't overwrite the math
+        "pinned": "right",    # Pinning it to the right ensures it stays visible even on small screens
+        "type": "numericColumn",
+        "width": 90,
+        "cellStyle": {
+            "fontWeight": "bold", 
+            "backgroundColor": f"{accent_color}15" # Give it a light tint to match your theme
+        },
+        "valueGetter": {"function": sum_logic},
+        "valueFormatter": {
+            "function": "params.value != null ? d3.format(',.0f')(params.value).replace(/,/g, ' ') : ''"
+        }
+    })
+        
     return dag.AgGrid(
         id=grid_id,
         columnDefs=grid_cols,
         rowData=[], 
+        columnSize="responsiveSizeToFit", # <- Is this the best solution for different screen types, I guess not...
         dashGridOptions={
             "rowSelection": "single", 
             "stopEditingWhenCellsLoseFocus": True,
@@ -69,24 +92,69 @@ def create_budget_grid(grid_id, header_name, accent_color="#228be6"):
         }
     )
 
+def create_status_grid(grid_id):
+    # Matches the exact column widths of your main grids
+    status_cols = [
+        {
+            "headerName": "", 
+            "field": "Category", 
+            "pinned": "left", 
+            "width": 200, 
+            "cellStyle": {"fontWeight": "bold", "border": "none"}
+        }
+    ]
+    
+    for month in months:
+        status_cols.append({
+            "field": month,
+            "width": 75,
+            "type": "numericColumn",
+            "cellStyle": {
+                "styleConditions": [
+                    {"condition": "params.value == 0", "style": {"backgroundColor": "#ebfbee", "color": "#2b8a3e"}},
+                    {"condition": "params.value != 0", "style": {"backgroundColor": "#fff5f5", "color": "#c92a2a"}}
+                ]
+            },
+            "valueFormatter": {"function": "params.value == 0 ? '✓' : d3.format(',.0f')(params.value).replace(/,/g, ' ')"}
+        })
+
+    # Add the Total column to match the others
+    status_cols.append({
+        "field": "row_total",
+        "width": 90,
+        "pinned": "right",
+        "cellStyle": {
+            "styleConditions": [
+                {"condition": "params.value == 0", "style": {"backgroundColor": "#ebfbee", "color": "#2b8a3e", "fontWeight": "bold"}},
+                {"condition": "params.value != 0", "style": {"backgroundColor": "#fff5f5", "color": "#c92a2a", "fontWeight": "bold"}}
+            ]
+        },
+        "valueFormatter": {"function": "params.value == 0 ? '✓' : d3.format(',.0f')(params.value).replace(/,/g, ' ')"}
+    })
+
+    return dag.AgGrid(
+        id=grid_id,
+        columnDefs=status_cols,
+        rowData=[{"Category": "Att allokera"}], # Initial dummy row
+        columnSize="responsiveSizeToFit",
+        dashGridOptions={
+            "headerHeight": 24, 
+            "rowHeight": 24,
+            "domLayout": "autoHeight",
+            "suppressNoRowsOverlay": True,
+        },
+        className="ag-theme-balham",
+    )
+
 # --- UI COMPONENTS ---
 header = dmc.Group([
-    dmc.Title("Zero-Based Budget", order=3),
+    dmc.Title("Budget", order=3),
     dmc.Group([
         dmc.Button("Lägg till Kategori", id="open-modal-btn", variant="light", size="sm"),
         dmc.Select(id="year-select", data=["2024", "2025", "2026"], value="2026", w=100, size="sm")
     ])
 ], justify="space-between", mb="md")
 
-summary_bar = dmc.Paper(
-    withBorder=True, p="xs", radius="md", mb="md", shadow="sm",
-    children=[
-        dmc.Group([
-            dmc.Text("Ska allokeras:", fw=700, size="sm", c="dimmed"),
-            html.Div(id="summary-status-container", style={"display": "flex", "gap": "8px", "flexWrap": "wrap"})
-        ])
-    ]
-)
 
 modal = dmc.Modal(
     title="Lägg till ny kategori",
@@ -117,122 +185,13 @@ save_controls = dmc.Stack([
 layout = dmc.Container([
     modal,
     header,
-    summary_bar,
     
     # We use smaller margins (mb="sm") to compress the view
     dmc.Stack([
-        create_budget_grid("grid-inkomst", "Inkomst", "#8ED973"),
-    
+    create_status_grid("grid-status"),
+    create_budget_grid("grid-inkomst", "Inkomst", "#8ED973"),
     create_budget_grid("grid-utgift", "Utgift" ,"#F1A983"),
-    
     create_budget_grid("grid-sparande","Sparande", "#61CBF3")
     ], gap="m"),
     save_controls
-], size="xl", pt="md") # pt="md" instead of "xl" to move it up slightly
-
-
-# --- CALLBACK 1: MODAL OPEN / CLOSE & ADD ROW ---
-@callback(
-    Output("add-modal", "opened"),
-    Output("grid-inkomst", "rowData"),
-    Output("grid-utgift", "rowData"),
-    Output("grid-sparande", "rowData"),
-    Output("modal-category", "value"), # Reset input after save
-    Input("open-modal-btn", "n_clicks"),
-    Input("modal-save-btn", "n_clicks"),
-    State("modal-type", "value"),
-    State("modal-category", "value"),
-    State("grid-inkomst", "rowData"),
-    State("grid-utgift", "rowData"),
-    State("grid-sparande", "rowData"),
-    prevent_initial_call=True
-)
-def handle_modal_and_add_row(open_clicks, save_clicks, row_type, category_name, inc_data, exp_data, sav_data):
-    ctx = dash.callback_context
-    triggered_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-    # Open the modal
-    if triggered_id == "open-modal-btn":
-        return True, no_update, no_update, no_update, no_update
-
-    # Save the new row to the correct table and close modal
-    if triggered_id == "modal-save-btn" and category_name:
-        new_row = {"Category": category_name, **{m: 0 for m in months}}
-        
-        # Default fallbacks if data is None on first load
-        inc_data = inc_data or []
-        exp_data = exp_data or []
-        sav_data = sav_data or []
-
-        if row_type == "inkomst":
-            return False, inc_data + [new_row], no_update, no_update, ""
-        elif row_type == "utgift":
-            return False, no_update, exp_data + [new_row], no_update, ""
-        elif row_type == "sparande":
-            return False, no_update, no_update, sav_data + [new_row], ""
-
-    return False, no_update, no_update, no_update, no_update
-
-
-# --- CALLBACK 2: CLIENTSIDE MATH (Fixed Outputs) ---
-clientside_callback(
-    ClientsideFunction(namespace="budget", function_name="calculateAll"),
-    # Output("summary-status-container", "dangerouslySetInnerHTML"),
-    Output("grid-inkomst", "dashGridOptions"),
-    Output("grid-utgift", "dashGridOptions"),
-    Output("grid-sparande", "dashGridOptions"),
-    Input("grid-inkomst", "virtualRowData"),
-    Input("grid-utgift", "virtualRowData"),
-    Input("grid-sparande", "virtualRowData"),
-    Input("grid-inkomst", "cellValueChanged"),
-    Input("grid-utgift", "cellValueChanged"),
-    Input("grid-sparande", "cellValueChanged"),
-    State("grid-inkomst", "dashGridOptions"),
-    State("grid-utgift", "dashGridOptions"),
-    State("grid-sparande", "dashGridOptions"),
-)
-
-@callback(
-    Output("save-notification", "children"),
-    Input("save-budget-btn", "n_clicks"),
-    State("year-select", "value"),
-    State("grid-inkomst", "rowData"),
-    State("grid-utgift", "rowData"),
-    State("grid-sparande", "rowData"),
-    prevent_initial_call=True
-)
-def update_database(n_clicks, year, inc_data, exp_data, sav_data):
-    try:
-        # Call the helper function created in step 1
-        save_budget_to_db(int(year), inc_data, exp_data, sav_data)
-        # return dmc.Notification( #TODO: understand how dmc.Notifications work
-        #     title="Sparat!",
-        #     message=f"Budgeten för {year} har uppdaterats i databasen.",
-        #     color="green",
-        #     action="show"
-        # )
-        return "Sparat!"
-    except Exception as e:
-        print(e)
-        return dmc.Notification(
-            title="Ett fel uppstod",
-            message=str(e),
-            color="red",
-            action="show"
-        )
-    
-@callback(
-    Output("grid-inkomst", "rowData", allow_duplicate=True),
-    Output("grid-utgift", "rowData", allow_duplicate=True),
-    Output("grid-sparande", "rowData", allow_duplicate=True),
-    Input("year-select", "value"),
-    # This is the magic string that fixes the error
-    prevent_initial_call='initial_duplicate' 
-)
-def populate_grids_on_load(selected_year):
-    if not selected_year:
-        return [], [], []
-        
-    inc_data, exp_data, sav_data = load_budget_from_db(int(selected_year))
-    
-    return inc_data, exp_data, sav_data
+], size="xl", pt="md")
