@@ -1,63 +1,18 @@
 import dash
-from dash import Dash, dcc
+from dash import Dash
 import dash_mantine_components as dmc
-from dash_iconify import DashIconify # Import the icon component
+from components.sidebar_buttons import create_sidebar_button
 
 app = Dash(__name__, use_pages=True)
-
-# Helper function to keep code clean
-def get_icon(icon):
-    return DashIconify(icon=icon, width=20)
 
 sidebar = dmc.AppShellNavbar(
     dmc.Stack(
         [
             dmc.Title("My Finance App", order=3, c="blue", mb="xl"), 
-            
-            dcc.Link(
-                dmc.Button(
-                    "Startsida",
-                    leftSection=get_icon("material-symbols:home-outline-rounded"), # can change to "-light"
-                    variant="subtle", 
-                    fullWidth=True, 
-                    justify="left"
-                ), 
-                href="/", 
-                style={"textDecoration": "none"}
-            ),
-            dcc.Link(
-                dmc.Button(
-                    "Transaktioner",  # TODO: this handles both new transaktions and looking at all
-                    leftSection=get_icon("material-symbols:list-rounded"), # can change to "-light"
-                    variant="subtle", 
-                    fullWidth=True, 
-                    justify="left"
-                ), 
-                href="/transactions", 
-                style={"textDecoration": "none"}
-            ),
-            dcc.Link(
-                dmc.Button(
-                    "Dashboard", 
-                    leftSection=get_icon("material-symbols:dashboard-outline-rounded"), # can change to "-light"
-                    variant="subtle", 
-                    fullWidth=True, 
-                    justify="left"
-                ), 
-                href="/dashboard", 
-                style={"textDecoration": "none"}
-            ),
-            dcc.Link(
-                dmc.Button(
-                    "Budget", 
-                    leftSection=get_icon("material-symbols:dashboard-outline-rounded"), # can change to "-light"
-                    variant="subtle", 
-                    fullWidth=True, 
-                    justify="left"
-                ), 
-                href="/budget", 
-                style={"textDecoration": "none"}
-            ),
+            create_sidebar_button("Startsida", "material-symbols:home-outline-rounded", "/"),
+            create_sidebar_button("Transaktioner", "material-symbols:list-rounded", "/transactions"),
+            create_sidebar_button("Dashboard", "material-symbols:dashboard-outline-rounded", "/dashboard"),
+            create_sidebar_button("Budget", "material-symbols:calculate-outline-rounded", "/budget")
         ],
         gap="sm",
     ),

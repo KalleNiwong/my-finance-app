@@ -2,42 +2,69 @@ import dash
 import dash_ag_grid as dag
 import dash_mantine_components as dmc
 from dash import html, Input, Output, State, callback, clientside_callback, ClientsideFunction, no_update
-
+from database.db_manager import save_budget_to_db, load_budget_from_db
 dash.register_page(__name__, path='/budget', name="Budget Planner")
 
 months = ["jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
 
-# --- GRID COLUMNS ---
-# Removed 'Section' since the tables are separated now.
-columnDefs = [{"field": "Category", "pinned": "left", "width": 150}]
-for month in months:
-    columnDefs.append({
-        "field": month,
-        "editable": True,
-        "type": "numericColumn",
-        "width": 80, # Made slightly narrower to fit smaller screens better
-        "valueFormatter": {"function": "d3.format(',.0f')(params.value)"}
-    })
+def create_budget_grid(grid_id, header_name, accent_color="#228be6"):
+    # 1. Generate columns locally so we can customize the first header
+    grid_cols = [
+        {
+            "headerName": header_name,  # This is the visible title (Inkomst, etc.)
+            "field": "Category",        # Keep this as 'Category' for your DB/callbacks
+            "pinned": "left", 
+            "width": 200,               # Slimmed down from 200
+            "cellStyle": {"fontWeight": "bold"} 
+        }
+    ]
+    
+    for month in months:
+        grid_cols.append({
+            "field": month,
+            "editable": True,
+            "type": "numericColumn",
+            "width": 75, # Slimmed down to fit 12 months easily
+            "valueFormatter": {
+                "function": "params.value != null ? d3.format(',.0f')(params.value).replace(/,/g, ' ') : ''"
+            }
+        })
 
-def create_budget_grid(grid_id):
     return dag.AgGrid(
         id=grid_id,
-        columnDefs=columnDefs,
+        columnDefs=grid_cols,
         rowData=[], 
-        # Move it INSIDE dashGridOptions
         dashGridOptions={
             "rowSelection": "single", 
             "stopEditingWhenCellsLoseFocus": True,
             "domLayout": "autoHeight",
-            "pinnedBottomRowData": [{"Category": "Total"}] ,
-            # "rowHeight": 30,      # Standard is ~45. 30 is very "Excel-slim"
-            # "headerHeight": 32,   # Shrinks the header row height
+            "pinnedBottomRowData": [{"Category": "Total"}],
+            "rowHeight": 24,
+            "headerHeight": 24,
         },
-        defaultColDef={"resizable": True, "sortable": False, "editable": True, "suppressMovableColumns": True},
+        defaultColDef={
+            "resizable": True, 
+            "sortable": False, 
+            "editable": True, 
+            "suppressMovable": True,
+            "cellStyle": {"display": "flex", "alignItems": "center"}
+        },
+        style={
+            "--ag-active-color": accent_color,
+            "--ag-header-background-color": f"{accent_color}90", # 40% opacity for better text contrast
+            "--ag-background-color": f"{accent_color}10" # Very subtle tint for the grid body
+        },
         className="ag-theme-balham",
         getRowStyle={
             "styleConditions": [
-                {"condition": "params.node.rowPinned === 'bottom'", "style": {"fontWeight": "bold", "backgroundColor": "#f8f9fa", "borderTop": "1px solid #dee2e6"}}
+                {
+                    "condition": "params.node.rowPinned === 'bottom'", 
+                    "style": {
+                        "fontWeight": "bold", 
+                        "backgroundColor": "#f8f9fa", 
+                        "borderTop": f"2px solid {accent_color}"
+                    }
+                }
             ]
         }
     )
@@ -78,6 +105,14 @@ modal = dmc.Modal(
     ]
 )
 
+# Add this to your layout, perhaps in a Sticky footer or below the last grid
+save_controls = dmc.Stack([
+    dmc.Button("Spara Ändringar", id="save-budget-btn", color="teal", variant="filled"),
+    html.Div(id="save-notification")
+], justify="flex-end", mt="xl", style={"width": 150})
+
+# Add save_controls to your layout Container...
+
 # --- LAYOUT ---
 layout = dmc.Container([
     modal,
@@ -85,15 +120,14 @@ layout = dmc.Container([
     summary_bar,
     
     # We use smaller margins (mb="sm") to compress the view
-    dmc.Text("Inkomst", fw=600, c="teal", size="sm", mb=4),
-    create_budget_grid("grid-inkomst"),
+    dmc.Stack([
+        create_budget_grid("grid-inkomst", "Inkomst", "#8ED973"),
     
-    dmc.Text("Utgift", fw=600, c="red", size="sm", mt="sm", mb=4),
-    create_budget_grid("grid-utgift"),
+    create_budget_grid("grid-utgift", "Utgift" ,"#F1A983"),
     
-    dmc.Text("Sparande", fw=600, c="blue", size="sm", mt="sm", mb=4),
-    create_budget_grid("grid-sparande"),
-
+    create_budget_grid("grid-sparande","Sparande", "#61CBF3")
+    ], gap="m"),
+    save_controls
 ], size="xl", pt="md") # pt="md" instead of "xl" to move it up slightly
 
 
@@ -157,3 +191,48 @@ clientside_callback(
     State("grid-utgift", "dashGridOptions"),
     State("grid-sparande", "dashGridOptions"),
 )
+
+@callback(
+    Output("save-notification", "children"),
+    Input("save-budget-btn", "n_clicks"),
+    State("year-select", "value"),
+    State("grid-inkomst", "rowData"),
+    State("grid-utgift", "rowData"),
+    State("grid-sparande", "rowData"),
+    prevent_initial_call=True
+)
+def update_database(n_clicks, year, inc_data, exp_data, sav_data):
+    try:
+        # Call the helper function created in step 1
+        save_budget_to_db(int(year), inc_data, exp_data, sav_data)
+        # return dmc.Notification( #TODO: understand how dmc.Notifications work
+        #     title="Sparat!",
+        #     message=f"Budgeten för {year} har uppdaterats i databasen.",
+        #     color="green",
+        #     action="show"
+        # )
+        return "Sparat!"
+    except Exception as e:
+        print(e)
+        return dmc.Notification(
+            title="Ett fel uppstod",
+            message=str(e),
+            color="red",
+            action="show"
+        )
+    
+@callback(
+    Output("grid-inkomst", "rowData", allow_duplicate=True),
+    Output("grid-utgift", "rowData", allow_duplicate=True),
+    Output("grid-sparande", "rowData", allow_duplicate=True),
+    Input("year-select", "value"),
+    # This is the magic string that fixes the error
+    prevent_initial_call='initial_duplicate' 
+)
+def populate_grids_on_load(selected_year):
+    if not selected_year:
+        return [], [], []
+        
+    inc_data, exp_data, sav_data = load_budget_from_db(int(selected_year))
+    
+    return inc_data, exp_data, sav_data
