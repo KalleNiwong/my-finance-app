@@ -1,6 +1,6 @@
 # My Finance App
 
-Combining my passions for **personal finance** and **data** to connsolidate my many over-engineered spreadsheets into a professional Python application and being able to share it with others.
+Combining my passions for **personal finance** and **data** to consolidate my many over-engineered spreadsheets into a professional (still maybe over-engineered?) Python application and being able to share it with others.
 
 ## The Project
 Building a holistic view of my personal finance using the **Dash** ecosystem.
