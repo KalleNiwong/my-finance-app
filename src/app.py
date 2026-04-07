@@ -3,7 +3,11 @@ from dash import Dash
 import dash_mantine_components as dmc
 from components.sidebar_buttons import create_sidebar_button
 
-app = Dash(__name__, use_pages=True, suppress_callback_exceptions=True)
+external_stylesheets = [
+    "https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+]
+
+app = Dash(__name__, use_pages=True, suppress_callback_exceptions=True, external_stylesheets=external_stylesheets)
 
 from callbacks import cb_budget
 
@@ -23,11 +27,17 @@ sidebar = dmc.AppShellNavbar(
 )
 
 app.layout = dmc.MantineProvider(
-    dmc.AppShell(
-        [sidebar, dmc.AppShellMain(dash.page_container)],
-        navbar={"width": 250, "breakpoint": "sm"}, 
-        padding="md"
-    )
+    theme={
+        "fontFamily": "'Inter', sans-serif",
+        "headings": {"fontFamily": "'Inter', sans-serif"},
+    },
+    children=[
+        dmc.AppShell(
+            [sidebar, dmc.AppShellMain(dash.page_container)],
+            navbar={"width": 250, "breakpoint": "sm"}, 
+            padding="md"
+        )
+    ]
 )
 
 if __name__ == "__main__":

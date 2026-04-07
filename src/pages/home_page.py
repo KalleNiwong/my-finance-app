@@ -9,7 +9,7 @@ layout = html.Div([
     dmc.Container(
         [
             dmc.Title("Startsida", order=2, mb="xl"),
-            dmc.Text("Your analytics and charts will go here.")
+            dmc.Text("WIP...")
         ],
         size="md",
         pt="xl"
