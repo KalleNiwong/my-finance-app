@@ -30,12 +30,20 @@ def create_upload_component() -> dmc.Paper:
 
 def generate_upload_display_table() -> dag.AgGrid:
     columnDefs = [
-        {"field": "transaktionsdatum", "headerName": "Date"},
-        {"field": "text", "headerName": "Description", "editable": True},
-        {"field": "belopp", "headerName": "Amount"},
+        {"field": "transaktionsdatum", "headerName": "Datum", "width": 124},
+        {"field": "text", "headerName": "Beskrivning", "editable": True},
+        {"field": "belopp", "headerName": "Belopp", "width": 124},
         {
-            "field": "category", 
-            "headerName": "Category", 
+            "field": "typ", 
+            "headerName": "Typ", 
+            "editable": True,
+            "cellEditor": "agSelectCellEditor",
+            "cellEditorParams": {"values": ["Inkomst", "Utgift", "Sparande"]},
+            "width": 111
+        },
+        {
+            "field": "kategori", 
+            "headerName": "Kategori", 
             "editable": True,
             "cellEditor": "agSelectCellEditor",
             "cellEditorParams": {"values": ["Food", "Rent", "Salary", "Entertainment"]}
@@ -46,6 +54,10 @@ def generate_upload_display_table() -> dag.AgGrid:
         id="upload-display-grid",
         columnDefs=columnDefs,
         rowData=[],
-        dashGridOptions={"rowSelection": "multiple"},
+        dashGridOptions={
+            "rowSelection": {
+                "mode": "multiRow"
+            }
+        },
     )
     return grid

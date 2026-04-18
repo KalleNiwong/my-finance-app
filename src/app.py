@@ -9,7 +9,7 @@ external_stylesheets = [
 
 app = Dash(__name__, use_pages=True, suppress_callback_exceptions=True, external_stylesheets=external_stylesheets)
 
-from callbacks import cb_budget
+from callbacks import cb_budget, upload_and_save_to_db
 
 sidebar = dmc.AppShellNavbar(
     dmc.Stack(

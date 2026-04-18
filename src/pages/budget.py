@@ -30,7 +30,7 @@ header = dmc.Group(
                     label="Välj År",
                     data=["2024", "2025", "2026"],
                     value="2026",
-                    w=80, 
+                    w=100, 
                     size="sm",
                 ),
             ],
