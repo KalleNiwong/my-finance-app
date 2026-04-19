@@ -9,4 +9,9 @@ Building a holistic view of my personal finance using the **Dash** ecosystem.
 - **Local First:** A local centralized SQLite database for full control and respect of your data
 
 ## Vision
+Help people with their personal finance by turning raw bank transactions into interesting and helpful graphs to ensure they are taking data driven decisions for their economy. 
+
+## Preview
+WORK IN PROGRESS...
+![Preview](src/assets/preview.png)
 Help people with their personal finance by turning raw bank transactions into interesting and helpful graphs to ensure you are taking data driven decisions for your economy. 

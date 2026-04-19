@@ -7,7 +7,7 @@ window.dash_clientside = Object.assign({}, window.dash_clientside, {
             let inc_totals = {"Category": "Total"}, exp_totals = {"Category": "Total"}, sav_totals = {"Category": "Total"};
             
             // This will hold the data for our "Status Grid"
-            let statusRow = {"Category": "Budgetstatus"};
+            let statusRow = {"Category": "Ofördelat"};
             let grand_diff = 0;
 
             months.forEach(m => {

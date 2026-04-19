@@ -1,3 +1,4 @@
+/* to not have a minimum height of the AGGrids*/
 .ag-center-cols-viewport {
     min-height: unset !important;
 }

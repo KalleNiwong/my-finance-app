@@ -2,7 +2,7 @@ import dash
 import dash_mantine_components as dmc
 from dash import Input, Output, State, callback, clientside_callback, ClientsideFunction, no_update
 from database.db_manager import save_budget_to_db, load_budget_from_db
-from pages.budget import months # is this best practice?
+from components.budget_grids import MONTHS # is this best practice?
 
 
 @callback(
@@ -30,7 +30,7 @@ def handle_modal_and_add_row(open_clicks, save_clicks, row_type, category_name, 
 
     # Save the new row to the correct table and close modal
     if triggered_id == "modal-save-btn" and category_name:
-        new_row = {"Category": category_name, **{m: 0 for m in months}}
+        new_row = {"Category": category_name, **{m: 0 for m in MONTHS}}
         
         # Default fallbacks if data is None on first load
         inc_data = inc_data or []

@@ -14,8 +14,9 @@ from utils.parser import parse_xlsx
     prevent_initial_call=True
 )
 def handle_upload(contents, filename):
+
     if contents is None:
-        return ""
+        return "", f"❌ Error: {str(e)}"
 
     try:
         df = parse_xlsx(contents, filename)
@@ -26,4 +27,4 @@ def handle_upload(contents, filename):
         
     except Exception as e:
         # Returning a red text for errors
-        return pd.DataFrame().to_dict("records"), dmc.Text(f"❌ Error: {str(e)}")
+        return pd.DataFrame().to_dict("records"), f"❌ Error: {str(e)}"
