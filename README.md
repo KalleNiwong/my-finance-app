@@ -14,4 +14,3 @@ Help people with their personal finance by turning raw bank transactions into in
 ## Preview
 WORK IN PROGRESS...
 ![Preview](src/assets/preview.png)
-Help people with their personal finance by turning raw bank transactions into interesting and helpful graphs to ensure you are taking data driven decisions for your economy. 
