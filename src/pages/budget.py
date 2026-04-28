@@ -79,4 +79,4 @@ layout = dmc.Container([
     create_grid("grid-sparande","Sparande", accent_color="#61CBF3")
     ], gap="m"),
     save_controls
-], size="xl", pt="md")
+], size="xxl", pt="xxl")

@@ -16,7 +16,7 @@ layout = html.Div([
             generate_upload_display_table(),
             dmc.Box(id="grid-container", mt="xl")
         ], 
-        size="md", 
-        pt="xl"
+        size="xxl", 
+        pt="xxl"
     )
 ])

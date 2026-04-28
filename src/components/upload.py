@@ -30,23 +30,50 @@ def create_upload_component() -> dmc.Paper:
 
 def generate_upload_display_table() -> dag.AgGrid:
     columnDefs = [
-        {"field": "transaktionsdatum", "headerName": "Datum", "width": 124},
-        {"field": "text", "headerName": "Beskrivning", "editable": True},
-        {"field": "belopp", "headerName": "Belopp", "width": 124},
+        {"field": "transaktionsdatum", "headerName": "Datum", "width": 120, "suppressSizeToFit": True},
+        {"field": "text", "headerName": "Beskrivning", "editable": True, "flex": 2}, 
+        {"field": "belopp", "headerName": "Belopp", "width": 100, "suppressSizeToFit": True},
         {
             "field": "typ", 
             "headerName": "Typ", 
             "editable": True,
             "cellEditor": "agSelectCellEditor",
             "cellEditorParams": {"values": ["Inkomst", "Utgift", "Sparande"]},
-            "width": 111
+            "width": 100,
+            "suppressSizeToFit": True
         },
         {
             "field": "kategori", 
             "headerName": "Kategori", 
             "editable": True,
             "cellEditor": "agSelectCellEditor",
-            "cellEditorParams": {"values": ["Food", "Rent", "Salary", "Entertainment"]}
+            "cellEditorParams": {"values": ["Food", "Rent", "Salary", "Entertainment"]},
+            "flex": 1 
+        },
+        {
+            "field": "källa",
+            "headerName": "Källa",
+            "editable": False,
+            "width": 100,
+            "suppressSizeToFit": True
+        },
+        {
+            "field": "från_konto", 
+            "headerName": "Från Konto", 
+            "editable": True,
+            "cellEditor": "agSelectCellEditor",
+            "cellEditorParams": {"values": ["Checking", "Savings", "Credit Card"]},
+            "width": 110,
+            "suppressSizeToFit": True
+        },
+        {
+            "field": "till_konto",
+            "headerName": "Till Konto",
+            "editable": True,
+            "cellEditor": "agSelectCellEditor",
+            "cellEditorParams": {"values": ["Checking", "Savings", "Credit Card"]},
+            "width": 110,
+            "suppressSizeToFit": True
         },
     ]
 
@@ -55,9 +82,9 @@ def generate_upload_display_table() -> dag.AgGrid:
         columnDefs=columnDefs,
         rowData=[],
         dashGridOptions={
-            "rowSelection": {
-                "mode": "multiRow"
-            }
+            "rowSelection": {"mode": "multiRow"},
+            "rowHeight": 45,
         },
+        dangerously_allow_code=True # for badges
     )
     return grid
