@@ -103,7 +103,7 @@ def create_grid(grid_id, header_name, is_status=False, accent_color="#228be6"):
             "fontFamily": "'Inter', sans-serif", 
             "--ag-font-family": "'Inter', sans-serif",
         },
-        className="ag-theme-balham",
+        className="ag-theme-balham status-grid" if is_status else "ag-theme-balham",
         # Only apply custom row pinning styles to budget grids
         getRowStyle={
             "styleConditions": [

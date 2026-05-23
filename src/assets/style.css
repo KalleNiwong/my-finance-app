@@ -1,4 +1,9 @@
-/* to not have a minimum height of the AGGrids*/
+/* to not have a minimum height of the AGGrids */
 .ag-center-cols-viewport {
     min-height: 48px !important;
+}
+
+/* Status grid custom min-height */
+.status-grid .ag-center-cols-viewport {
+    min-height: 0px !important;
 }

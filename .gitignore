@@ -1,3 +1,4 @@
 finance.db
 *.xlsx
 test.py
+__pycache__
